@@ -24,12 +24,18 @@ python -m unittest discover -s tests
 python -m examples.h4
 ```
 
-The H4 example writes the energy estimate at each Krylov dimension for two
+The H4 example uses the bundled Hamiltonian and Hartree-Fock reference from
+the `ocqkudsin` square-H4 comparison. This keeps its Krylov starting state
+and convergence reproducible across PennyLane versions. To build the
+Hamiltonian with the installed PennyLane version instead, run
+`python -m examples.h4 --rebuild`; orbital choices may then change which
+eigenstates the Hartree-Fock reference can reach.
+
+The example writes the energy estimate at each Krylov dimension for three
 epsilon values and their overlap-matrix condition numbers to
 `output/output.txt`, and saves a condition-number plot as
 `output/condition_number.png` plus an energy-convergence plot as
 `output/energy_convergence.png`. It also computes an exact active-space FCI
 reference for the balanced 2-alpha/2-beta sector and saves the absolute energy
 error plot as `output/energy_error_fci.png`. The output directory is created
-automatically. Results can vary with the PennyLane version used to generate
-the molecular Hamiltonian.
+automatically.
