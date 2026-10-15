@@ -7,6 +7,10 @@ Hamiltonian into the resulting subspace.
 
 The implementation uses dense matrices and exact time evolution.
 
+The [mathematical implementation guide](docs/cqkud_mathematical_implementation.pdf)
+derives the solver's equations, circuits, numerical choices, and H4 example.
+Its editable LaTeX source is in the same directory.
+
 ## Install
 
 Use Python 3.10 or newer.
