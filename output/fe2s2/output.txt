@@ -1,0 +1,48 @@
+Fe2S2 (2Fe-2S), neutral singlet, 6-31G, 4 electrons in 4 active orbitals
+Geometry: illustrative planar rhombus derived from approximate neutral Fe2S2 bond lengths
+The geometry is not optimized for this model; CAS(4e,4o) is a small benchmark active space.
+  Fe  -1.216000   0.000000   0.000000 Angstrom
+  Fe   1.216000   0.000000   0.000000 Angstrom
+  S    0.000000  -1.750000   0.000000 Angstrom
+  S    0.000000   1.750000   0.000000 Angstrom
+Hamiltonian source: converged PySCF RHF orbitals and 4e/4o CASCI integrals
+RHF converged; RHF energy = -3318.794092991665 Ha
+Identity energy offset: -3318.486229109937 Ha
+Shifted Pauli coefficient bound: 5.071356168990 Ha
+Sine filter acts on the identity-shifted Hamiltonian; the offset is restored below.
+Singlet active-space FCI (2 alpha + 2 beta): -3319.195181461301 Ha
+Lowest RHF-connected exact energy: -3319.183447578788 Ha
+RHF weight in the lowest singlet FCI state: 3.570e-30
+The singlet FCI ground state is inaccessible from this symmetry-preserving RHF reference.
+
+epsilon = 0.5
+ K   Energy (Ha)          FCI error (Ha)       alpha          beta      overlap condition
+ 1  -3318.794092991663    4.01088470e-01   -0.03034688    0.04985018      1.00000000e+00
+ 2  -3319.024358762255    1.70822699e-01    0.05656993    0.05201623      1.00000000e+00
+ 3  -3319.135526378331    5.96550830e-02   -0.00595333    0.01362544      1.00000000e+00
+ 4  -3319.171179996785    2.40014645e-02   -0.05437049    0.00940130      1.00000000e+00
+ 5  -3319.179391946381    1.57895149e-02   -0.03711334    0.01636497      1.00000000e+00
+ 6  -3319.183441339522    1.17401218e-02   -0.04011944    0.00066697      1.00000000e+00
+ 7  -3319.183447121444    1.17343399e-02   -0.05345452    0.01111772      1.00006104e+00
+
+epsilon = 0.8
+ K   Energy (Ha)          FCI error (Ha)       alpha          beta      overlap condition
+ 1  -3318.794092991663    4.01088470e-01   -0.04853919    0.07960234      1.00000000e+00
+ 2  -3319.024408799354    1.70772662e-01    0.09018344    0.08306990      1.00000000e+00
+ 3  -3319.135496223209    5.96852381e-02   -0.00951008    0.02175337      1.00000000e+00
+ 4  -3319.171147689676    2.40337716e-02   -0.08690745    0.01503060      1.00000000e+00
+ 5  -3319.179373926775    1.58075345e-02   -0.05928471    0.02614568      1.00000000e+00
+ 6  -3319.183441308794    1.17401525e-02   -0.06422752    0.00106333      1.00000000e+00
+ 7  -3319.183447256749    1.17342046e-02   -0.08548034    0.01763220      1.00000191e+00
+ 8  -3319.183447551656    1.17339096e-02    0.15853038    0.01875208      1.00002198e+00
+
+epsilon = 1.2
+ K   Energy (Ha)          FCI error (Ha)       alpha          beta      overlap condition
+ 1  -3318.794092991663    4.01088470e-01   -0.07275995    0.11891858      1.00000000e+00
+ 2  -3319.024511586788    1.70669875e-01    0.13426740    0.12412533      1.00000000e+00
+ 3  -3319.135434178302    5.97472830e-02   -0.01421846    0.03248446      1.00000000e+00
+ 4  -3319.171080923199    2.41005381e-02   -0.13009866    0.02251083      1.00000000e+00
+ 5  -3319.179336664303    1.58447970e-02   -0.08863002    0.03909988      1.00000000e+00
+ 6  -3319.183441244919    1.17402164e-02   -0.09645326    0.00158332      1.00000000e+00
+ 7  -3319.183447257828    1.17342035e-02   -0.12807536    0.02597131      1.00000024e+00
+ 8  -3319.183447551385    1.17339099e-02    0.23649953    0.02831450      1.00000419e+00

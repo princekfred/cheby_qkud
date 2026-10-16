@@ -1,11 +1,10 @@
-"""Run OCQKUDSIN on a neutral, closed-shell Fe2S/6-31G model.
+"""Run OCQKUDSIN on an illustrative neutral Fe2S2 (2Fe-2S) model.
 
-The default C2v geometry is a stationary point of restricted Hartree-Fock
-(RHF)/6-31G optimized for this input. It is a model-specific local geometry;
-Fe2S's physical singlet is strongly correlated, so this is not an experimental
-equilibrium structure. The SCF calculation follows one RHF solution smoothly
-from a nearby seed because a cold start at the optimized coordinates can
-converge to a different electronic solution.
+The planar rhombus is derived from approximate bond lengths reported for an
+isolated neutral Fe2S2 singlet (J. Phys. Chem. A 2019, DOI 10.1021/acs.jpca.9b08201).
+It is not a published Cartesian geometry or an RHF stationary point. Restricted
+Hartree-Fock supplies orbitals for this deliberately small CAS(4e,4o) example;
+the model does not resolve antiferromagnetically coupled local iron spins.
 """
 
 from __future__ import annotations
@@ -28,70 +27,53 @@ from matplotlib.ticker import FormatStrFormatter
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ocqkudsin import MolecularProblem, QuantumOCQKUDSIN
+from ocqkudsin import MolecularProblem, QuantumOCQKUDSIN, balanced_spin_sector
 
 
-SYMBOLS = ("Fe", "Fe", "S")
-# C2v RHF/6-31G stationary point for the neutral restricted singlet.
-# Fe-Fe = 2.6081782389 A; Fe-S = 2.3154118753 A; Fe-S-Fe = 68.5577 deg.
+SYMBOLS = ("Fe", "Fe", "S", "S")
+# Illustrative planar rhombus: Fe-Fe = 2.432 A, Fe-S = 2.131 A.
+# Approximate lengths derive from DOI 10.1021/acs.jpca.9b08201; they are not
+# optimized coordinates for the bare 6-31G/RHF model used here.
 GEOMETRY_ANGSTROM = np.array(
     [
-        [-1.304089119452, 0.0, 0.0],
-        [1.304089119452, 0.0, 0.0],
-        [0.0, 1.913239065221, 0.0],
+        [-1.216, 0.0, 0.0],
+        [1.216, 0.0, 0.0],
+        [0.0, -1.750, 0.0],
+        [0.0, 1.750, 0.0],
     ],
     dtype=float,
 )
-# This nearby geometry selects the same SCF solution when moved in small steps.
-SCF_SEED_ANGSTROM = np.array(
-    [[-1.25, 0.0, 0.0], [1.25, 0.0, 0.0], [0.0, 1.808, 0.0]],
-    dtype=float,
-)
 BASIS = "6-31g"
+CHARGE = 0
+SPIN = 0
 ACTIVE_ELECTRONS = 4
 ACTIVE_ORBITALS = 4
 EPSILONS = (0.5, 0.8, 1.2)
 MAX_DIMENSION = 8
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "fe2s"
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "fe2s2"
 
 
-def _tracked_singlet_rhf(geometry_angstrom: np.ndarray):
-    """Reach the intended RHF solution by projecting the density along a path."""
+def _singlet_rhf(geometry_angstrom: np.ndarray):
+    """Converge restricted orbitals for the stated neutral singlet model."""
 
-    previous_molecule = None
-    previous_density = None
-    mean_field = None
-    for step, fraction in enumerate(np.linspace(0.0, 1.0, 7)):
-        coordinates = (
-            (1.0 - fraction) * SCF_SEED_ANGSTROM
-            + fraction * geometry_angstrom
+    molecule = gto.M(
+        atom=list(zip(SYMBOLS, geometry_angstrom)),
+        unit="Angstrom",
+        basis=BASIS,
+        charge=CHARGE,
+        spin=SPIN,
+        verbose=0,
+    )
+    mean_field = scf.RHF(molecule)
+    mean_field.max_cycle = 150
+    mean_field.conv_tol = 1e-10
+    mean_field.conv_tol_grad = 1e-7
+    energy = float(mean_field.kernel())
+    if not mean_field.converged or not np.isfinite(energy):
+        raise RuntimeError(
+            "Fe2S2 RHF failed to converge; no Hamiltonian was constructed "
+            "from unconverged orbitals."
         )
-        molecule = gto.M(
-            atom=list(zip(SYMBOLS, coordinates)),
-            unit="Angstrom",
-            basis=BASIS,
-            charge=0,
-            spin=0,
-            verbose=0,
-        )
-        mean_field = scf.RHF(molecule)
-        mean_field.max_cycle = 150
-        mean_field.conv_tol = 1e-10
-        mean_field.conv_tol_grad = 1e-7
-        if previous_density is None:
-            initial_density = None
-        else:
-            initial_density = scf.addons.project_dm_nr2nr(
-                previous_molecule, previous_density, molecule
-            )
-        energy = float(mean_field.kernel(dm0=initial_density))
-        if not mean_field.converged or not np.isfinite(energy):
-            raise RuntimeError(
-                f"Fe2S RHF failed at SCF path step {step + 1}/7; "
-                "no Hamiltonian was constructed from unconverged orbitals."
-            )
-        previous_molecule = molecule
-        previous_density = mean_field.make_rdm1()
     return mean_field
 
 
@@ -104,7 +86,7 @@ def _build_shifted_problem(
     unchanged. It is added back to every reported physical energy.
     """
 
-    mean_field = _tracked_singlet_rhf(geometry_angstrom)
+    mean_field = _singlet_rhf(geometry_angstrom)
     rhf_energy = float(mean_field.e_tot)
     casci = mcscf.CASCI(mean_field, ACTIVE_ORBITALS, ACTIVE_ELECTRONS)
     one_mo, core_energy = casci.get_h1eff()
@@ -127,7 +109,7 @@ def _build_shifted_problem(
     coefficients, operators = hamiltonian.terms()
     coefficients = np.asarray(coefficients, dtype=complex)
     if np.max(np.abs(coefficients.imag)) > 1e-10:
-        raise ValueError("the Fe2S Pauli Hamiltonian has nonreal coefficients")
+        raise ValueError("the Fe2S2 Pauli Hamiltonian has nonreal coefficients")
     coefficients = coefficients.real
 
     identity_indices = [
@@ -135,7 +117,7 @@ def _build_shifted_problem(
         if operator.name == "Identity"
     ]
     if not identity_indices:
-        raise ValueError("the Fe2S Hamiltonian has no identity energy to shift")
+        raise ValueError("the Fe2S2 Hamiltonian has no identity energy to shift")
     identity_shift = float(np.sum(coefficients[identity_indices]))
     nonidentity_indices = [
         index for index in range(len(operators)) if index not in identity_indices
@@ -164,6 +146,28 @@ def _build_shifted_problem(
         pauli_bound=pauli_bound,
     )
     return problem, identity_shift, rhf_energy, float(singlet_fci_energy)
+
+
+def _hf_connected_exact_energy(
+    problem: MolecularProblem, identity_shift: float, fci_energy: float
+) -> tuple[float, float]:
+    """Find the lowest exact state with weight in the RHF reference."""
+
+    sector = balanced_spin_sector(
+        problem.n_qubits, ACTIVE_ELECTRONS // 2, ACTIVE_ELECTRONS // 2
+    )
+    matrix = np.asarray(
+        qml.matrix(problem.hamiltonian, wire_order=range(problem.n_qubits)),
+        dtype=complex,
+    )
+    eigenvalues, eigenvectors = np.linalg.eigh(matrix[np.ix_(sector, sector)])
+    if abs(eigenvalues[0] + identity_shift - fci_energy) > 1e-7:
+        raise ValueError("the Pauli Hamiltonian disagrees with the CASCI FCI energy")
+    weights = np.abs(eigenvectors.conj().T @ problem.hf_state[sector]) ** 2
+    connected = np.flatnonzero(weights > 1e-10)
+    if not len(connected):
+        raise ValueError("no exact state overlaps the RHF reference")
+    return float(eigenvalues[connected[0]] + identity_shift), float(weights[0])
 
 
 def _save_chebyshev_coefficients(
@@ -205,7 +209,7 @@ def _save_chebyshev_coefficients(
         axes_one.set_xlabel(r"Lanczos iteration $n$")
         axes_one.grid(True, linestyle="--", alpha=0.35)
     np.atleast_1d(axes)[0].set_ylabel(r"$\log_{10}|c_{n,m}|$")
-    figure.suptitle(r"Fe$_2$S: growth of each Chebyshev coefficient")
+    figure.suptitle(r"Fe$_2$S$_2$: growth of each Chebyshev coefficient")
     handles, labels = np.atleast_1d(axes)[0].get_legend_handles_labels()
     figure.legend(handles, labels, ncol=max_m, loc="lower center")
     figure.tight_layout(rect=(0, 0.1, 1, 0.94))
@@ -240,7 +244,7 @@ def _save_chebyshev_coefficients(
         axes_one.set_yticks(range(max_n))
         axes_one.set_xlabel(r"Chebyshev order $m$")
     np.atleast_1d(axes)[0].set_ylabel(r"Lanczos iteration $n$")
-    figure.suptitle(r"Fe$_2$S: $\log_{10}|c_{n,m}|$ at each iteration")
+    figure.suptitle(r"Fe$_2$S$_2$: $\log_{10}|c_{n,m}|$ at each iteration")
     figure.colorbar(
         image, ax=np.atleast_1d(axes).tolist(), shrink=0.83,
         label=r"$\log_{10}|c_{n,m}|$",
@@ -250,25 +254,33 @@ def _save_chebyshev_coefficients(
 
 
 def main(*, output_dir: Path = OUTPUT_DIR) -> None:
-    """Build the Fe2S Hamiltonian directly and save OCQKUDSIN results."""
+    """Build the Fe2S2 Hamiltonian directly and save OCQKUDSIN results."""
 
     output_dir = Path(output_dir)
     geometry = np.asarray(GEOMETRY_ANGSTROM, dtype=float)
-    if geometry.shape != (3, 3) or not np.all(np.isfinite(geometry)):
-        raise ValueError("GEOMETRY_ANGSTROM must contain three finite XYZ rows")
+    if geometry.shape != (len(SYMBOLS), 3) or not np.all(np.isfinite(geometry)):
+        raise ValueError("GEOMETRY_ANGSTROM must contain four finite XYZ rows")
     problem, identity_shift, rhf_energy, fci_energy = _build_shifted_problem(geometry)
+    connected_energy, fci_weight = _hf_connected_exact_energy(
+        problem, identity_shift, fci_energy
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Fe2S, neutral singlet, 6-31G, 4 electrons in 4 active orbitals")
-    print("Geometry: C2v RHF/6-31G stationary point for the closed-shell model")
+    print("Fe2S2 (2Fe-2S), neutral singlet, 6-31G, 4 electrons in 4 active orbitals")
+    print("Geometry: illustrative planar rhombus derived from approximate neutral Fe2S2 bond lengths")
+    print("The geometry is not optimized for this model; CAS(4e,4o) is a small benchmark active space.")
     for symbol, coordinates in zip(SYMBOLS, geometry):
         print(f"  {symbol:2s}  {coordinates[0]: .6f}  {coordinates[1]: .6f}  {coordinates[2]: .6f} Angstrom")
     print("Hamiltonian source: converged PySCF RHF orbitals and 4e/4o CASCI integrals")
-    print(f"RHF converged along seven-step density path; RHF energy = {rhf_energy:.12f} Ha")
+    print(f"RHF converged; RHF energy = {rhf_energy:.12f} Ha")
     print(f"Identity energy offset: {identity_shift:.12f} Ha")
     print(f"Shifted Pauli coefficient bound: {problem.pauli_bound:.12f} Ha")
     print("Sine filter acts on the identity-shifted Hamiltonian; the offset is restored below.")
     print(f"Singlet active-space FCI (2 alpha + 2 beta): {fci_energy:.12f} Ha")
+    print(f"Lowest RHF-connected exact energy: {connected_energy:.12f} Ha")
+    print(f"RHF weight in the lowest singlet FCI state: {fci_weight:.3e}")
+    if fci_weight <= 1e-10:
+        print("The singlet FCI ground state is inaccessible from this symmetry-preserving RHF reference.")
 
     condition_data = []
     energy_data = []
@@ -317,7 +329,7 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
         axes.plot(dimensions, conditions, marker="o", label=rf"$\epsilon={epsilon:g}$")
     axes.set_xlabel("Krylov dimension (K)")
     axes.set_ylabel(r"Overlap-matrix condition number, $\kappa(S)$")
-    axes.set_title(r"Fe$_2$S overlap-matrix condition number")
+    axes.set_title(r"Fe$_2$S$_2$ overlap-matrix condition number")
     axes.yaxis.set_major_formatter(FormatStrFormatter("%.8f"))
     axes.grid(True, linestyle="--", alpha=0.5)
     axes.legend()
@@ -332,9 +344,14 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
         fci_energy, color="black", linestyle="--",
         label=f"Active-space FCI: {fci_energy:.6f} Ha",
     )
+    if connected_energy - fci_energy > 1e-8:
+        axes.axhline(
+            connected_energy, color="gray", linestyle=":",
+            label=f"RHF-connected exact: {connected_energy:.6f} Ha",
+        )
     axes.set_xlabel("Krylov dimension (K)")
     axes.set_ylabel("Ground-state energy estimate (Ha)")
-    axes.set_title(r"Fe$_2$S active-space energy convergence")
+    axes.set_title(r"Fe$_2$S$_2$ active-space energy convergence")
     axes.grid(True, linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
@@ -347,9 +364,14 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
             dimensions, np.maximum(errors, np.finfo(float).tiny),
             marker="o", label=rf"$\epsilon={epsilon:g}$",
         )
+    if connected_energy - fci_energy > 1e-8:
+        axes.axhline(
+            connected_energy - fci_energy, color="gray", linestyle=":",
+            label="RHF-connected error floor",
+        )
     axes.set_xlabel("Krylov dimension (K)")
     axes.set_ylabel("Absolute error from active-space FCI (Ha)")
-    axes.set_title(r"Fe$_2$S energy error relative to active-space FCI")
+    axes.set_title(r"Fe$_2$S$_2$ energy error relative to active-space FCI")
     axes.grid(True, which="both", linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
@@ -376,7 +398,7 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
     for axes in (alpha_axes, beta_axes):
         axes.grid(True, linestyle="--", alpha=0.4)
     alpha_axes.legend(ncol=len(lanczos_data))
-    figure.suptitle(r"Fe$_2$S OCQKUDSIN Lanczos coefficients")
+    figure.suptitle(r"Fe$_2$S$_2$ OCQKUDSIN Lanczos coefficients")
     figure.tight_layout(rect=(0, 0, 1, 0.95))
     figure.savefig(output_dir / "lanczos_coefficients.png", dpi=200)
     plt.close(figure)
@@ -388,7 +410,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output-dir", type=Path, default=OUTPUT_DIR,
-        help="directory for OCQKUDSIN results (default: output/fe2s/)",
+        help="directory for OCQKUDSIN results (default: output/fe2s2/)",
     )
     args = parser.parse_args()
     output_dir = Path(args.output_dir)
