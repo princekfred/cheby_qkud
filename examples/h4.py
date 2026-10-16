@@ -1,4 +1,4 @@
-"""Run square H4 with OCQKUD at epsilon=0.5, 0.8, and 1.2."""
+"""Run the OCQKUDSIN sine filter on square H4."""
 
 from __future__ import annotations
 
@@ -19,9 +19,9 @@ from matplotlib.ticker import FormatStrFormatter
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cqkud import (
+from ocqkudsin import (
     MolecularProblem,
-    QuantumOCQKUD,
+    QuantumOCQKUDSIN,
     build_molecular_problem,
     exact_sector_energy,
 )
@@ -38,7 +38,7 @@ GEOMETRY_ANGSTROM = np.array(
 EPSILONS = (0.5, 0.8, 1.2)
 MAX_DIMENSION = 8
 ARCHIVE_FILE = Path(__file__).resolve().parent / "data" / "h4_square_hamiltonian.npz"
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output"
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "ocqkudsin"
 OUTPUT_FILE = OUTPUT_DIR / "output.txt"
 CONDITION_PLOT_FILE = OUTPUT_DIR / "condition_number.png"
 ENERGY_PLOT_FILE = OUTPUT_DIR / "energy_convergence.png"
@@ -101,7 +101,7 @@ def load_archived_problem(snapshot: Path = ARCHIVE_FILE) -> MolecularProblem:
     )
 
 
-def main(*, rebuild: bool = False) -> None:
+def _load_problem(rebuild: bool) -> tuple[MolecularProblem, str]:
     if rebuild:
         problem = build_molecular_problem(
             symbols=["H", "H", "H", "H"],
@@ -114,9 +114,21 @@ def main(*, rebuild: bool = False) -> None:
     else:
         problem = load_archived_problem()
         source = "bundled H4 Hamiltonian from the ocqkudsin comparison"
+    return problem, source
+
+
+def main(
+    *,
+    rebuild: bool = False,
+    output_dir: Path = OUTPUT_DIR,
+) -> None:
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    problem, source = _load_problem(rebuild)
 
     fci_energy = exact_sector_energy(problem, n_alpha=2, n_beta=2)
     print("Square H4, side length 1.5 Angstrom, STO-3G")
+    print("Solver: OCQKUDSIN")
     print(f"Hamiltonian source: {source}")
     print(f"Pauli coefficient bound: {problem.pauli_bound:.12f} Hartree")
     print(f"FCI energy (active space, 2 alpha + 2 beta): {fci_energy:.12f} Hartree")
@@ -124,10 +136,12 @@ def main(*, rebuild: bool = False) -> None:
     energy_data = []
     fci_error_data = []
     for epsilon in EPSILONS:
-        result = QuantumOCQKUD(
+        result = QuantumOCQKUDSIN(
             problem,
             epsilon=epsilon,
             max_dimension=MAX_DIMENSION,
+            # At K=8 the Lanczos moment difference can cancel to about 1e-10.
+            moment_tolerance=1e-9,
         ).run()
 
         print(f"\nepsilon = {epsilon:g}")
@@ -181,7 +195,7 @@ def main(*, rebuild: bool = False) -> None:
     axes.grid(True, linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
-    figure.savefig(CONDITION_PLOT_FILE, dpi=200)
+    figure.savefig(output_dir / CONDITION_PLOT_FILE.name, dpi=200)
     plt.close(figure)
 
     figure, axes = plt.subplots()
@@ -199,7 +213,7 @@ def main(*, rebuild: bool = False) -> None:
     axes.grid(True, linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
-    figure.savefig(ENERGY_PLOT_FILE, dpi=200)
+    figure.savefig(output_dir / ENERGY_PLOT_FILE.name, dpi=200)
     plt.close(figure)
 
     figure, axes = plt.subplots()
@@ -216,7 +230,7 @@ def main(*, rebuild: bool = False) -> None:
     axes.grid(True, which="both", linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
-    figure.savefig(FCI_ERROR_PLOT_FILE, dpi=200)
+    figure.savefig(output_dir / FCI_ERROR_PLOT_FILE.name, dpi=200)
     plt.close(figure)
 
 
@@ -227,8 +241,17 @@ if __name__ == "__main__":
         action="store_true",
         help="generate a new Hamiltonian with the installed PennyLane version",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=OUTPUT_DIR,
+        help="directory for OCQKUDSIN results (default: output/ocqkudsin/)",
+    )
     args = parser.parse_args()
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_FILE.open("w", encoding="utf-8") as output:
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / OUTPUT_FILE.name
+    with output_file.open("w", encoding="utf-8") as output:
         with redirect_stdout(output):
-            main(rebuild=args.rebuild)
+            main(rebuild=args.rebuild, output_dir=output_dir)
+    print(f"OCQKUDSIN results: {output_file}")

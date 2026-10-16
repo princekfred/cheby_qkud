@@ -5,15 +5,25 @@ It builds the normalized sine-filter operator, generates Lanczos states with
 Chebyshev coefficients, measures the required moments, and projects the
 Hamiltonian into the resulting subspace.
 
+`ocqkudsin` provides an explicit OCQKUDSIN import using the same sine-filter
+solver. Both names use the numerical stability improvements in `cqkud.py`.
+
 The implementation uses dense matrices and exact time evolution.
 
-The [mathematical implementation guide](docs/cqkud_mathematical_implementation.pdf)
-derives the solver's equations, circuits, numerical choices, and H4 example.
-Its editable LaTeX source is in the same directory.
+The [two-page mathematical implementation](docs/cqkud_mathematical_implementation.pdf)
+explains the sine-filter solver, projected Ritz energy, and collected state
+expectation with its global factor absorbed into each coefficient. Its
+editable LaTeX source is in the same directory.
+The [H4 collected-values PDF](docs/h4_collected_values_cqkud_landscape.pdf)
+shows the first six states at epsilon 0.5, 0.8, and 1.2 in landscape form.
+Its [full-precision data](docs/h4_collected_values_cqkud_landscape.json) can
+be regenerated with `python3 examples/h4_collected_values.py`.
+The [OCQKUDSIN mathematical implementation](docs/ocqkudsin_math_implementation.pdf)
+describes the shared sine-filter solver.
 
 ## Install
 
-Use Python 3.10 or newer.
+Use Python 3.9 or newer.
 
 ```bash
 python -m pip install -e .
@@ -24,7 +34,6 @@ python -m pip install -e .
 From the repository root:
 
 ```bash
-python -m unittest discover -s tests
 python -m examples.h4
 ```
 
@@ -35,11 +44,9 @@ Hamiltonian with the installed PennyLane version instead, run
 `python -m examples.h4 --rebuild`; orbital choices may then change which
 eigenstates the Hartree-Fock reference can reach.
 
-The example writes the energy estimate at each Krylov dimension for three
-epsilon values and their overlap-matrix condition numbers to
-`output/output.txt`, and saves a condition-number plot as
-`output/condition_number.png` plus an energy-convergence plot as
-`output/energy_convergence.png`. It also computes an exact active-space FCI
-reference for the balanced 2-alpha/2-beta sector and saves the absolute energy
-error plot as `output/energy_error_fci.png`. The output directory is created
-automatically.
+The single H4 input in `examples/h4.py` runs only OCQKUDSIN at epsilon
+0.5, 0.8, and 1.2. It writes `output.txt`, an energy-convergence plot,
+an overlap condition-number plot, and an absolute error plot against the
+balanced-sector active-space FCI reference to `output/ocqkudsin/`.
+Use `--output-dir PATH` to choose another output directory.
+The original `ocqkudsin` import name `QuantumOCQKUD` also remains available.

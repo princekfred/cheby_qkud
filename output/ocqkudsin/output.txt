@@ -1,4 +1,5 @@
 Square H4, side length 1.5 Angstrom, STO-3G
+Solver: OCQKUDSIN
 Hamiltonian source: bundled H4 Hamiltonian from the ocqkudsin comparison
 Pauli coefficient bound: 5.717610381693 Hartree
 FCI energy (active space, 2 alpha + 2 beta): -1.955125015330 Hartree

@@ -1,0 +1,260 @@
+\documentclass[10pt,letterpaper,landscape]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=0.52in}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.35em}
+\pagestyle{plain}
+\begin{document}
+\begin{center}
+{\Large Square H4: CQKUD collected expectations with numerical values}\\[0.3em]
+{\large First six states at $\epsilon=0.5,\,0.8,\,1.2$}
+\end{center}
+\small
+Only the collected final expression is shown for each state. The number beneath
+each expectation or paired bracket is its value in Hartree; full-precision
+coefficients and complex moments are in the accompanying JSON.
+Here $H=\Lambda\bar H$ with $\Lambda=\texttt{5.7176103816932775}$ Hartree,
+$V=e^{-i\epsilon\bar H}$, and
+$X_\epsilon=\sin(\epsilon\bar H)=(V^\dagger-V)/(2i)$.
+The solver uses $U_\epsilon=iV$ internally; this display converts
+to the unshifted notation of the reference PDF. The common denominator
+$4^n\prod_{j=1}^{n}\beta_j^2$ is divided into every displayed coefficient;
+the JSON also retains the original numerator coefficients and denominator.
+Printed values are rounded; final values use
+unrounded \texttt{Decimal} spectral sums for the saved float64 Hamiltonian.
+\normalsize
+
+\section*{$\epsilon=0.5$}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=0$, $\epsilon=0.5$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_0|H|q_0\rangle &\simeq \underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\\[1.2em]&\simeq -1.71399864222195\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=1$, $\epsilon=0.5$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{1}|H|q_{1}\rangle &\simeq \begin{aligned}[t]&569.0327900720766\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -162.6272732871267\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.53284571232561824927\,i}}\\[1.45em]
+&-272.3790682842995\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.2585459375096481863}}\end{aligned}\\[1.4em]&\simeq -1.10647786459087\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=2$, $\epsilon=0.5$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{2}|H|q_{2}\rangle &\simeq \begin{aligned}[t]&279395.0084809545\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -125151.5238270513\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.53284571232561824927\,i}}\\[1.45em]
+&-181326.5639720599\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.2585459375096481863}}\qquad +40980.42948697482\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.5438524551682598373\,i}}\\[1.45em]
+&+41689.69464403519\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.7680199835889209941}}\end{aligned}\\[1.4em]&\simeq -0.91848567184919\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=3$, $\epsilon=0.5$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{3}|H|q_{3}\rangle &\simeq \begin{aligned}[t]&298571281.4337836\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -168034178.7626228\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.53284571232561824927\,i}}\\[1.45em]
+&-219583376.1397285\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.2585459375096481863}}\qquad +82905599.94200149\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.5438524551682598373\,i}}\\[1.45em]
+&+82680769.83493157\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.7680199835889209941}}\qquad -16140706.18129165\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3966598674003788273\,i}}\\[1.45em]
+&-12382757.11647446\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.0079707503756156320}}\end{aligned}\\[1.4em]&\simeq -1.38556292512746\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=4$, $\epsilon=0.5$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{4}|H|q_{4}\rangle &\simeq \begin{aligned}[t]&291675182959.2208\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -203232875228.1910\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.53284571232561824927\,i}}\\[1.45em]
+&-228950674869.1096\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.2585459375096481863}}\qquad +120185519588.2699\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.5438524551682598373\,i}}\\[1.45em]
+&+107979763911.6118\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.7680199835889209941}}\qquad -38905855968.12261\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3966598674003788273\,i}}\\[1.45em]
+&-27841759358.24048\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.0079707503756156320}}\qquad +5315041882.192464\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{7}|\Phi_0\rangle-\langle\Phi_0|HV^{7}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0046767553685994014\,i}}\\[1.45em]
+&+2975081898.205348\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{8}|\Phi_0\rangle+\langle\Phi_0|HV^{8}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -1.0580870097656434729}}\end{aligned}\\[1.4em]&\simeq -1.45706219215062\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=5$, $\epsilon=0.5$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{5}|H|q_{5}\rangle &\simeq \begin{aligned}[t]&1261917677922614\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -1004015886949390\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.53284571232561824927\,i}}\\[1.45em]
+&-1032911405093890\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.2585459375096481863}}\qquad +659265474807230.8\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.5438524551682598373\,i}}\\[1.45em]
+&+558662442345972.4\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.7680199835889209941}}\qquad -274015380419518.9\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3966598674003788273\,i}}\\[1.45em]
+&-190335504470127.1\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.0079707503756156320}}\qquad +65375277021886.67\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{7}|\Phi_0\rangle-\langle\Phi_0|HV^{7}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0046767553685994014\,i}}\\[1.45em]
+&+36595559474084.17\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{8}|\Phi_0\rangle+\langle\Phi_0|HV^{8}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -1.0580870097656434729}}\qquad -6814510486177.674\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{9}|\Phi_0\rangle-\langle\Phi_0|HV^{9}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.3074530328231895645\,i}}\\[1.45em]
+&-2969931049143.802\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{10}|\Phi_0\rangle+\langle\Phi_0|HV^{10}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.017571627431013454598}}\end{aligned}\\[1.4em]&\simeq -0.55793093694726\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\clearpage
+\section*{$\epsilon=0.8$}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=0$, $\epsilon=0.8$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_0|H|q_0\rangle &\simeq \underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\\[1.2em]&\simeq -1.71399864222195\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=1$, $\epsilon=0.8$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{1}|H|q_{1}\rangle &\simeq \begin{aligned}[t]&242.9114136046073\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -103.6083708740815\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.84681618762395919122\,i}}\\[1.45em]
+&-109.1637426189016\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.0001662989749354033}}\end{aligned}\\[1.4em]&\simeq -1.10320579379105\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=2$, $\epsilon=0.8$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{2}|H|q_{2}\rangle &\simeq \begin{aligned}[t]&51401.68277308659\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -32351.41813668650\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.84681618762395919122\,i}}\\[1.45em]
+&-32243.42107665950\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.0001662989749354033}}\qquad +10315.27159295141\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3211444136241064810\,i}}\\[1.45em]
+&+6603.890080019638\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -1.8302240980000421244}}\end{aligned}\\[1.4em]&\simeq -0.91843039460536\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=3$, $\epsilon=0.8$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{3}|H|q_{3}\rangle &\simeq \begin{aligned}[t]&24208253.63367886\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -18115311.49769285\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.84681618762395919122\,i}}\\[1.45em]
+&-17415733.73988726\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.0001662989749354033}}\qquad +8767718.842726072\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3211444136241064810\,i}}\\[1.45em]
+&+6103233.231930318\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -1.8302240980000421244}}\qquad -1640292.827004470\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.1967799598152527156\,i}}\\[1.45em]
+&-791338.7634277226\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\end{aligned}\\[1.4em]&\simeq -1.38202314486757\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=4$, $\epsilon=0.8$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{4}|H|q_{4}\rangle &\simeq \begin{aligned}[t]&11027501250.41170\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -9405203021.465950\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.84681618762395919122\,i}}\\[1.45em]
+&-8501494660.752115\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.0001662989749354033}}\qquad +5453464509.415681\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3211444136241064810\,i}}\\[1.45em]
+&+3785168292.508527\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -1.8302240980000421244}}\qquad -1694956086.875232\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.1967799598152527156\,i}}\\[1.45em]
+&-873857473.0292991\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\qquad +217055578.1958137\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{7}|\Phi_0\rangle-\langle\Phi_0|HV^{7}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.2556510859480033290\,i}}\\[1.45em]
+&+76436450.57471710\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{8}|\Phi_0\rangle+\langle\Phi_0|HV^{8}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.3860417407686303962}}\end{aligned}\\[1.4em]&\simeq -1.46212365372230\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=5$, $\epsilon=0.8$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{5}|H|q_{5}\rangle &\simeq \begin{aligned}[t]&21038298705621.55\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -19141811491861.93\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 0.84681618762395919122\,i}}\\[1.45em]
+&-16969666858828.47\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -3.0001662989749354033}}\qquad +12328198570183.05\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3211444136241064810\,i}}\\[1.45em]
+&+8764513504128.838\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -1.8302240980000421244}}\qquad -4923893531160.532\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.1967799598152527156\,i}}\\[1.45em]
+&-2742033648054.741\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\qquad +1103125714896.390\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{7}|\Phi_0\rangle-\langle\Phi_0|HV^{7}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.2556510859480033290\,i}}\\[1.45em]
+&+456803378096.7257\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{8}|\Phi_0\rangle+\langle\Phi_0|HV^{8}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.3860417407686303962}}\qquad -105023249797.8273\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{9}|\Phi_0\rangle-\langle\Phi_0|HV^{9}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.4986378782400982213\,i}}\\[1.45em]
+&-28765556682.44267\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{10}|\Phi_0\rangle+\langle\Phi_0|HV^{10}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.5930713674867377749}}\end{aligned}\\[1.4em]&\simeq -0.55852558678781\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\clearpage
+\section*{$\epsilon=1.2$}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=0$, $\epsilon=1.2$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_0|H|q_0\rangle &\simeq \underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\\[1.2em]&\simeq -1.71399864222195\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=1$, $\epsilon=1.2$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{1}|H|q_{1}\rangle &\simeq \begin{aligned}[t]&127.5771595399004\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -71.87701023081387\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.2526854953542934527\,i}}\\[1.45em]
+&-51.16752656960491\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.4924303724391603781}}\end{aligned}\\[1.4em]&\simeq -1.09629275967935\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=2$, $\epsilon=1.2$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{2}|H|q_{2}\rangle &\simeq \begin{aligned}[t]&14025.68291105770\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -10739.53162642800\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.2526854953542934527\,i}}\\[1.45em]
+&-8359.666528914322\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.4924303724391603781}}\qquad +3256.026540634638\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0494213477204835595\,i}}\\[1.45em]
+&+1409.561663314479\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\end{aligned}\\[1.4em]&\simeq -0.91850149256893\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=3$, $\epsilon=1.2$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{3}|H|q_{3}\rangle &\simeq \begin{aligned}[t]&3537903.193418975\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -3034503.327170646\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.2526854953542934527\,i}}\\[1.45em]
+&-2471570.954845848\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.4924303724391603781}}\qquad +1418868.027600545\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0494213477204835595\,i}}\\[1.45em]
+&+783182.4526791019\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\qquad -246399.1622506350\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.1378145020559871415\,i}}\\[1.45em]
+&-80252.86625789131\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.0631812248568705017}}\end{aligned}\\[1.4em]&\simeq -1.37447786833031\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=4$, $\epsilon=1.2$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{4}|H|q_{4}\rangle &\simeq \begin{aligned}[t]&907921739.6257937\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -829982727.6292947\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.2526854953542934527\,i}}\\[1.45em]
+&-684956043.7892475\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.4924303724391603781}}\qquad +465816875.5323918\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0494213477204835595\,i}}\\[1.45em]
+&+284195202.6474495\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\qquad -135078346.0989742\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.1378145020559871415\,i}}\\[1.45em]
+&-56860074.93344345\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.0631812248568705017}}\qquad +15396038.79520822\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{7}|\Phi_0\rangle-\langle\Phi_0|HV^{7}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.5194797906825721355\,i}}\\[1.45em]
+&+3663678.548436862\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{8}|\Phi_0\rangle+\langle\Phi_0|HV^{8}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0909550315191541096}}\end{aligned}\\[1.4em]&\simeq -1.47241138632798\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\begin{minipage}{\linewidth}
+\textbf{Iteration $n=5$, $\epsilon=1.2$}
+
+\textbf{4. Collected final expression}
+\begingroup\small
+\[\begin{aligned}\langle q_{5}|H|q_{5}\rangle &\simeq \begin{aligned}[t]&851540924248.8696\,\underbrace{\langle\Phi_0|H|\Phi_0\rangle}_{{\scriptstyle\approx -1.7139986422219549103}}\qquad -799357137809.9429\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{1}|\Phi_0\rangle-\langle\Phi_0|HV^{1}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.2526854953542934527\,i}}\\[1.45em]
+&-675199236271.8854\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{2}|\Phi_0\rangle+\langle\Phi_0|HV^{2}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -2.4924303724391603781}}\qquad +499643907514.9662\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{3}|\Phi_0\rangle-\langle\Phi_0|HV^{3}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0494213477204835595\,i}}\\[1.45em]
+&+330378237745.7863\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{4}|\Phi_0\rangle+\langle\Phi_0|HV^{4}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.22777467475063368023}}\qquad -187400734101.0384\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{5}|\Phi_0\rangle-\langle\Phi_0|HV^{5}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.1378145020559871415\,i}}\\[1.45em]
+&-93413506031.73143\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{6}|\Phi_0\rangle+\langle\Phi_0|HV^{6}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.0631812248568705017}}\qquad +37872520928.04617\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{7}|\Phi_0\rangle-\langle\Phi_0|HV^{7}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 1.5194797906825721355\,i}}\\[1.45em]
+&+13032399229.08118\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{8}|\Phi_0\rangle+\langle\Phi_0|HV^{8}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 3.0909550315191541096}}\qquad -3076378741.747490\,i\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{9}|\Phi_0\rangle-\langle\Phi_0|HV^{9}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx -0.81981676818577920035\,i}}\\[1.45em]
+&-568178368.2332921\,\underbrace{\bigl(\langle\Phi_0|H(V^\dagger)^{10}|\Phi_0\rangle+\langle\Phi_0|HV^{10}|\Phi_0\rangle\bigr)}_{{\scriptstyle\approx 2.3360743621070288388}}\end{aligned}\\[1.4em]&\simeq -0.56013051367801\ \mathrm{Hartree}.\end{aligned}\]
+\endgroup
+\end{minipage}
+
+\vspace{1em}
+\end{document}
