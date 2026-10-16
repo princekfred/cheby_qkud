@@ -14,5 +14,11 @@ dependencies = [
     "pennylane>=0.36",
 ]
 
+[project.optional-dependencies]
+fe2s = [
+    "pyscf>=2.0",
+    "basis-set-exchange>=0.9",
+]
+
 [tool.setuptools]
 py-modules = ["ocqkudsin"]

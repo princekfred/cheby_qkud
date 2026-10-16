@@ -1,0 +1,400 @@
+"""Run OCQKUDSIN on a neutral, closed-shell Fe2S/6-31G model.
+
+The default C2v geometry is a stationary point of restricted Hartree-Fock
+(RHF)/6-31G optimized for this input. It is a model-specific local geometry;
+Fe2S's physical singlet is strongly correlated, so this is not an experimental
+equilibrium structure. The SCF calculation follows one RHF solution smoothly
+from a nearby seed because a cold start at the optimized coordinates can
+converge to a different electronic solution.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+from contextlib import redirect_stdout
+from pathlib import Path
+import sys
+
+import matplotlib
+import numpy as np
+import pennylane as qml
+from pyscf import ao2mo, fci, gto, mcscf, scf
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from ocqkudsin import MolecularProblem, QuantumOCQKUDSIN
+
+
+SYMBOLS = ("Fe", "Fe", "S")
+# C2v RHF/6-31G stationary point for the neutral restricted singlet.
+# Fe-Fe = 2.6081782389 A; Fe-S = 2.3154118753 A; Fe-S-Fe = 68.5577 deg.
+GEOMETRY_ANGSTROM = np.array(
+    [
+        [-1.304089119452, 0.0, 0.0],
+        [1.304089119452, 0.0, 0.0],
+        [0.0, 1.913239065221, 0.0],
+    ],
+    dtype=float,
+)
+# This nearby geometry selects the same SCF solution when moved in small steps.
+SCF_SEED_ANGSTROM = np.array(
+    [[-1.25, 0.0, 0.0], [1.25, 0.0, 0.0], [0.0, 1.808, 0.0]],
+    dtype=float,
+)
+BASIS = "6-31g"
+ACTIVE_ELECTRONS = 4
+ACTIVE_ORBITALS = 4
+EPSILONS = (0.5, 0.8, 1.2)
+MAX_DIMENSION = 8
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "fe2s"
+
+
+def _tracked_singlet_rhf(geometry_angstrom: np.ndarray):
+    """Reach the intended RHF solution by projecting the density along a path."""
+
+    previous_molecule = None
+    previous_density = None
+    mean_field = None
+    for step, fraction in enumerate(np.linspace(0.0, 1.0, 7)):
+        coordinates = (
+            (1.0 - fraction) * SCF_SEED_ANGSTROM
+            + fraction * geometry_angstrom
+        )
+        molecule = gto.M(
+            atom=list(zip(SYMBOLS, coordinates)),
+            unit="Angstrom",
+            basis=BASIS,
+            charge=0,
+            spin=0,
+            verbose=0,
+        )
+        mean_field = scf.RHF(molecule)
+        mean_field.max_cycle = 150
+        mean_field.conv_tol = 1e-10
+        mean_field.conv_tol_grad = 1e-7
+        if previous_density is None:
+            initial_density = None
+        else:
+            initial_density = scf.addons.project_dm_nr2nr(
+                previous_molecule, previous_density, molecule
+            )
+        energy = float(mean_field.kernel(dm0=initial_density))
+        if not mean_field.converged or not np.isfinite(energy):
+            raise RuntimeError(
+                f"Fe2S RHF failed at SCF path step {step + 1}/7; "
+                "no Hamiltonian was constructed from unconverged orbitals."
+            )
+        previous_molecule = molecule
+        previous_density = mean_field.make_rdm1()
+    return mean_field
+
+
+def _build_shifted_problem(
+    geometry_angstrom: np.ndarray,
+) -> tuple[MolecularProblem, float, float, float]:
+    """Remove the scalar identity energy to resolve the sine-filter moments.
+
+    The scalar shift leaves the molecular eigenvectors and energy differences
+    unchanged. It is added back to every reported physical energy.
+    """
+
+    mean_field = _tracked_singlet_rhf(geometry_angstrom)
+    rhf_energy = float(mean_field.e_tot)
+    casci = mcscf.CASCI(mean_field, ACTIVE_ORBITALS, ACTIVE_ELECTRONS)
+    one_mo, core_energy = casci.get_h1eff()
+    two_chemist = ao2mo.restore(
+        1, casci.get_h2eff(), ACTIVE_ORBITALS
+    )
+    singlet_fci_energy, _ = fci.direct_spin0.kernel(
+        one_mo, two_chemist, ACTIVE_ORBITALS,
+        (ACTIVE_ELECTRONS // 2, ACTIVE_ELECTRONS // 2),
+        ecore=core_energy,
+    )
+    two_physicist = np.swapaxes(two_chemist, 1, 3)
+    fermionic = qml.qchem.fermionic_observable(
+        np.array([core_energy]), one_mo, two_physicist
+    )
+    hamiltonian = qml.simplify(
+        qml.jordan_wigner(fermionic, ps=True, tol=1e-10).hamiltonian()
+    )
+    n_qubits = 2 * ACTIVE_ORBITALS
+    coefficients, operators = hamiltonian.terms()
+    coefficients = np.asarray(coefficients, dtype=complex)
+    if np.max(np.abs(coefficients.imag)) > 1e-10:
+        raise ValueError("the Fe2S Pauli Hamiltonian has nonreal coefficients")
+    coefficients = coefficients.real
+
+    identity_indices = [
+        index for index, operator in enumerate(operators)
+        if operator.name == "Identity"
+    ]
+    if not identity_indices:
+        raise ValueError("the Fe2S Hamiltonian has no identity energy to shift")
+    identity_shift = float(np.sum(coefficients[identity_indices]))
+    nonidentity_indices = [
+        index for index in range(len(operators)) if index not in identity_indices
+    ]
+    shifted_coefficients = coefficients[nonidentity_indices]
+    shifted_operators = tuple(operators[index] for index in nonidentity_indices)
+    shifted_hamiltonian = qml.Hamiltonian(
+        shifted_coefficients, list(shifted_operators)
+    )
+    pauli_bound = float(np.sum(np.abs(shifted_coefficients)))
+    if not np.isfinite(pauli_bound) or pauli_bound <= 0:
+        raise ValueError("the shifted Pauli coefficient bound must be positive")
+
+    hf_bits = np.asarray(
+        qml.qchem.hf_state(ACTIVE_ELECTRONS, n_qubits), dtype=int
+    )
+    hf_state = np.zeros(2**n_qubits, dtype=complex)
+    hf_state[int("".join(map(str, hf_bits)), 2)] = 1.0
+    problem = MolecularProblem(
+        hamiltonian=shifted_hamiltonian,
+        coefficients=shifted_coefficients,
+        operators=shifted_operators,
+        n_qubits=n_qubits,
+        hf_bits=hf_bits,
+        hf_state=hf_state,
+        pauli_bound=pauli_bound,
+    )
+    return problem, identity_shift, rhf_energy, float(singlet_fci_energy)
+
+
+def _save_chebyshev_coefficients(
+    output_dir: Path, data: list[tuple[float, list[np.ndarray]]]
+) -> None:
+    """Save all c[n,m] values and their iteration-by-iteration magnitude plots."""
+
+    with (output_dir / "chebyshev_coefficients.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as output:
+        writer = csv.writer(output)
+        writer.writerow(("epsilon", "n", "m", "real", "imaginary", "magnitude"))
+        for epsilon, rows in data:
+            for n, row in enumerate(rows):
+                for m, value in enumerate(row):
+                    writer.writerow(
+                        (epsilon, n, m, value.real, value.imag, abs(value))
+                    )
+
+    max_n = max(len(rows) for _, rows in data)
+    max_m = max(len(row) for _, rows in data for row in rows)
+    figure, axes = plt.subplots(
+        1, len(data), figsize=(15, 5.5), sharex=True, sharey=True
+    )
+    for axes_one, (epsilon, rows) in zip(np.atleast_1d(axes), data):
+        for m in range(max_m):
+            n_values = [n for n, row in enumerate(rows) if m < len(row)]
+            if n_values:
+                log_values = [
+                    np.log10(abs(rows[n][m])) if abs(rows[n][m]) else np.nan
+                    for n in n_values
+                ]
+                axes_one.plot(
+                    n_values, log_values, marker="o", markersize=4,
+                    label=rf"$m={m}$",
+                )
+        axes_one.set_title(rf"$\epsilon={epsilon:g}$")
+        axes_one.set_xticks(range(max_n))
+        axes_one.set_xlabel(r"Lanczos iteration $n$")
+        axes_one.grid(True, linestyle="--", alpha=0.35)
+    np.atleast_1d(axes)[0].set_ylabel(r"$\log_{10}|c_{n,m}|$")
+    figure.suptitle(r"Fe$_2$S: growth of each Chebyshev coefficient")
+    handles, labels = np.atleast_1d(axes)[0].get_legend_handles_labels()
+    figure.legend(handles, labels, ncol=max_m, loc="lower center")
+    figure.tight_layout(rect=(0, 0.1, 1, 0.94))
+    figure.savefig(output_dir / "chebyshev_coefficient_growth.png", dpi=200)
+    plt.close(figure)
+
+    arrays = []
+    for _, rows in data:
+        values = np.full((max_n, max_m), np.nan)
+        for n, row in enumerate(rows):
+            for m, value in enumerate(row):
+                if abs(value):
+                    values[n, m] = np.log10(abs(value))
+        arrays.append(values)
+    finite = np.concatenate([values[np.isfinite(values)] for values in arrays])
+    color_min = min(0.0, float(np.floor(np.min(finite))))
+    color_max = max(color_min + 1.0, float(np.ceil(np.max(finite))))
+    figure, axes = plt.subplots(
+        1, len(data), figsize=(15, 5.5), sharey=True, constrained_layout=True
+    )
+    colormap = plt.get_cmap("viridis").copy()
+    colormap.set_bad("white")
+    for axes_one, (epsilon, _), values in zip(
+        np.atleast_1d(axes), data, arrays
+    ):
+        image = axes_one.imshow(
+            np.ma.masked_invalid(values), origin="lower", aspect="equal",
+            cmap=colormap, vmin=color_min, vmax=color_max,
+        )
+        axes_one.set_title(rf"$\epsilon={epsilon:g}$")
+        axes_one.set_xticks(range(max_m))
+        axes_one.set_yticks(range(max_n))
+        axes_one.set_xlabel(r"Chebyshev order $m$")
+    np.atleast_1d(axes)[0].set_ylabel(r"Lanczos iteration $n$")
+    figure.suptitle(r"Fe$_2$S: $\log_{10}|c_{n,m}|$ at each iteration")
+    figure.colorbar(
+        image, ax=np.atleast_1d(axes).tolist(), shrink=0.83,
+        label=r"$\log_{10}|c_{n,m}|$",
+    )
+    figure.savefig(output_dir / "chebyshev_coefficient_heatmap.png", dpi=200)
+    plt.close(figure)
+
+
+def main(*, output_dir: Path = OUTPUT_DIR) -> None:
+    """Build the Fe2S Hamiltonian directly and save OCQKUDSIN results."""
+
+    output_dir = Path(output_dir)
+    geometry = np.asarray(GEOMETRY_ANGSTROM, dtype=float)
+    if geometry.shape != (3, 3) or not np.all(np.isfinite(geometry)):
+        raise ValueError("GEOMETRY_ANGSTROM must contain three finite XYZ rows")
+    problem, identity_shift, rhf_energy, fci_energy = _build_shifted_problem(geometry)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("Fe2S, neutral singlet, 6-31G, 4 electrons in 4 active orbitals")
+    print("Geometry: C2v RHF/6-31G stationary point for the closed-shell model")
+    for symbol, coordinates in zip(SYMBOLS, geometry):
+        print(f"  {symbol:2s}  {coordinates[0]: .6f}  {coordinates[1]: .6f}  {coordinates[2]: .6f} Angstrom")
+    print("Hamiltonian source: converged PySCF RHF orbitals and 4e/4o CASCI integrals")
+    print(f"RHF converged along seven-step density path; RHF energy = {rhf_energy:.12f} Ha")
+    print(f"Identity energy offset: {identity_shift:.12f} Ha")
+    print(f"Shifted Pauli coefficient bound: {problem.pauli_bound:.12f} Ha")
+    print("Sine filter acts on the identity-shifted Hamiltonian; the offset is restored below.")
+    print(f"Singlet active-space FCI (2 alpha + 2 beta): {fci_energy:.12f} Ha")
+
+    condition_data = []
+    energy_data = []
+    error_data = []
+    lanczos_data = []
+    chebyshev_data = []
+    for epsilon in EPSILONS:
+        result = QuantumOCQKUDSIN(
+            problem,
+            epsilon=epsilon,
+            max_dimension=MAX_DIMENSION,
+            moment_tolerance=1e-9,
+        ).run()
+        print(f"\nepsilon = {epsilon:g}")
+        print(
+            " K   Energy (Ha)          FCI error (Ha)       alpha"
+            "          beta      overlap condition"
+        )
+        dimensions = []
+        conditions = []
+        energies = []
+        errors = []
+        for row in result.history:
+            k = row["K"]
+            energy = row["energy_hartree"] + identity_shift
+            error = abs(energy - fci_energy)
+            print(
+                f"{k:2d}  {energy:18.12f}  {error:16.8e}  "
+                f"{result.alpha[k - 1]:12.8f}  {row['beta_next']:12.8f}  "
+                f"{row['overlap_condition']:18.8e}"
+            )
+            dimensions.append(k)
+            conditions.append(row["overlap_condition"])
+            energies.append(energy)
+            errors.append(error)
+        condition_data.append((epsilon, dimensions, conditions))
+        energy_data.append((epsilon, dimensions, energies))
+        error_data.append((epsilon, dimensions, errors))
+        lanczos_data.append((epsilon, result.alpha.copy(), result.beta.copy()))
+        chebyshev_data.append(
+            (epsilon, [row.copy() for row in result.chebyshev_coefficients])
+        )
+
+    figure, axes = plt.subplots()
+    for epsilon, dimensions, conditions in condition_data:
+        axes.plot(dimensions, conditions, marker="o", label=rf"$\epsilon={epsilon:g}$")
+    axes.set_xlabel("Krylov dimension (K)")
+    axes.set_ylabel(r"Overlap-matrix condition number, $\kappa(S)$")
+    axes.set_title(r"Fe$_2$S overlap-matrix condition number")
+    axes.yaxis.set_major_formatter(FormatStrFormatter("%.8f"))
+    axes.grid(True, linestyle="--", alpha=0.5)
+    axes.legend()
+    figure.tight_layout()
+    figure.savefig(output_dir / "condition_number.png", dpi=200)
+    plt.close(figure)
+
+    figure, axes = plt.subplots()
+    for epsilon, dimensions, energies in energy_data:
+        axes.plot(dimensions, energies, marker="o", label=rf"$\epsilon={epsilon:g}$")
+    axes.axhline(
+        fci_energy, color="black", linestyle="--",
+        label=f"Active-space FCI: {fci_energy:.6f} Ha",
+    )
+    axes.set_xlabel("Krylov dimension (K)")
+    axes.set_ylabel("Ground-state energy estimate (Ha)")
+    axes.set_title(r"Fe$_2$S active-space energy convergence")
+    axes.grid(True, linestyle="--", alpha=0.5)
+    axes.legend()
+    figure.tight_layout()
+    figure.savefig(output_dir / "energy_convergence.png", dpi=200)
+    plt.close(figure)
+
+    figure, axes = plt.subplots()
+    for epsilon, dimensions, errors in error_data:
+        axes.semilogy(
+            dimensions, np.maximum(errors, np.finfo(float).tiny),
+            marker="o", label=rf"$\epsilon={epsilon:g}$",
+        )
+    axes.set_xlabel("Krylov dimension (K)")
+    axes.set_ylabel("Absolute error from active-space FCI (Ha)")
+    axes.set_title(r"Fe$_2$S energy error relative to active-space FCI")
+    axes.grid(True, which="both", linestyle="--", alpha=0.5)
+    axes.legend()
+    figure.tight_layout()
+    figure.savefig(output_dir / "energy_error_fci.png", dpi=200)
+    plt.close(figure)
+
+    figure, (alpha_axes, beta_axes) = plt.subplots(
+        2, 1, figsize=(8.5, 6.5), sharex=True
+    )
+    for index, (epsilon, alpha, beta) in enumerate(lanczos_data):
+        color = f"C{index}"
+        alpha_axes.plot(
+            np.arange(1, len(alpha) + 1), alpha, color=color,
+            marker="o", label=rf"$\epsilon={epsilon:g}$",
+        )
+        beta_axes.plot(
+            np.arange(1, len(beta)), beta[1:], color=color, marker="o"
+        )
+    alpha_axes.axhline(0, color="black", linewidth=0.8, alpha=0.6)
+    alpha_axes.set_ylabel(r"Diagonal coefficient $\alpha_{K-1}$")
+    beta_axes.set_ylabel(r"Off-diagonal coefficient $\beta_K$")
+    beta_axes.set_xlabel(r"Lanczos iteration $K$")
+    beta_axes.set_xticks(range(1, max(len(a) for _, a, _ in lanczos_data) + 1))
+    for axes in (alpha_axes, beta_axes):
+        axes.grid(True, linestyle="--", alpha=0.4)
+    alpha_axes.legend(ncol=len(lanczos_data))
+    figure.suptitle(r"Fe$_2$S OCQKUDSIN Lanczos coefficients")
+    figure.tight_layout(rect=(0, 0, 1, 0.95))
+    figure.savefig(output_dir / "lanczos_coefficients.png", dpi=200)
+    plt.close(figure)
+
+    _save_chebyshev_coefficients(output_dir, chebyshev_data)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output-dir", type=Path, default=OUTPUT_DIR,
+        help="directory for OCQKUDSIN results (default: output/fe2s/)",
+    )
+    args = parser.parse_args()
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / "output.txt"
+    with output_file.open("w", encoding="utf-8") as output:
+        with redirect_stdout(output):
+            main(output_dir=output_dir)
+    print(f"OCQKUDSIN results: {output_file}")
