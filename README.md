@@ -29,21 +29,18 @@ python -m pip install -e .
 From the repository root:
 
 ```bash
-python -m examples.h4
+python3 examples/h4_lin.py
 ```
 
-The H4 example uses the bundled Hamiltonian and Hartree-Fock reference from
-the `ocqkudsin` square-H4 comparison. This keeps its Krylov starting state
-and convergence reproducible across PennyLane versions. To build the
-Hamiltonian with the installed PennyLane version instead, run
-`python -m examples.h4 --rebuild`; orbital choices may then change which
-eigenstates the Hartree-Fock reference can reach.
+The linear H4 input builds its Hamiltonian directly from four hydrogen atoms
+spaced 3.0 Angstrom apart, using STO-3G and four active electrons in four
+active orbitals. It runs only OCQKUDSIN at epsilon 0.5, 0.8, and 1.2, then
+writes the energies, overlap condition numbers, coefficient plots, and
+Chebyshev coefficient CSV to `output/h4_lin/`. No archived Hamiltonian is used.
 
-The single H4 input in `examples/h4.py` runs only OCQKUDSIN at epsilon
-0.5, 0.8, and 1.2. It writes `output.txt`, energy-convergence and
-overlap condition-number plots, an absolute error plot against the
-balanced-sector active-space FCI reference, and a Lanczos coefficient
-plot (PNG and PDF) to `output/ocqkudsin/`. It also saves plots of each
-Chebyshev coefficient's growth and a CSV of their full-precision values.
-Use `--output-dir PATH` to choose another output directory.
+For the square H4 example, run `python3 examples/h4_sq.py`. It builds the
+1.5 Angstrom square Hamiltonian directly with PennyLane, reports FCI errors
+in Ha, and writes results to `output/h4_sq/`. Use `--output-dir PATH` with
+either input to choose another output directory. The collected-values PDF
+above retains its separate archived Hamiltonian for reproducibility.
 The original `ocqkudsin` import name `QuantumOCQKUD` also remains available.

@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 os.environ.setdefault("MPLCONFIGDIR", tempfile.gettempdir())
 
 from ocqkudsin import QuantumOCQKUDSIN
-from examples.h4 import ARCHIVE_FILE, load_archived_problem
+from examples.h4_square_archive import ARCHIVE_FILE, load_archived_problem
 
 
 EPSILONS = (0.5, 0.8, 1.2)
