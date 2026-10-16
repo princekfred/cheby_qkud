@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 os.environ.setdefault("MPLCONFIGDIR", tempfile.gettempdir())
 
-from cqkud import QuantumOCQKUD
+from ocqkudsin import QuantumOCQKUDSIN
 from examples.h4 import ARCHIVE_FILE, load_archived_problem
 
 
@@ -278,7 +278,7 @@ def main() -> None:
         sector_indices = np.asarray(snapshot["sector_indices"], dtype=int)
     results = []
     for epsilon in EPSILONS:
-        raw = QuantumOCQKUD(
+        raw = QuantumOCQKUDSIN(
             problem, epsilon=epsilon, max_dimension=N_STATES
         ).collected_expressions(
             n_states=N_STATES,

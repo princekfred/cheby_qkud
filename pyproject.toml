@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cqkud"
+name = "ocqkudsin"
 version = "0.1.0"
-description = "Small-system circuit implementation of OCQKUD"
+description = "Small-system circuit implementation of OCQKUDSIN"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -15,4 +15,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-py-modules = ["cqkud", "ocqkudsin"]
+py-modules = ["ocqkudsin"]
