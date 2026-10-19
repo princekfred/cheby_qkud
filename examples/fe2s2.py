@@ -1,10 +1,12 @@
-"""Run OCQKUDSIN on an illustrative neutral Fe2S2 (2Fe-2S) model.
+"""Run OCQKUDSIN from a spin-adapted quintet state of neutral Fe2S2.
 
 The planar rhombus is derived from approximate bond lengths reported for an
 isolated neutral Fe2S2 singlet (J. Phys. Chem. A 2019, DOI 10.1021/acs.jpca.9b08201).
-It is not a published Cartesian geometry or an RHF stationary point. Restricted
-Hartree-Fock supplies orbitals for this deliberately small CAS(4e,4o) example;
-the model does not resolve antiferromagnetically coupled local iron spins.
+It is not a published Cartesian geometry or an optimized quintet geometry.
+Restricted Hartree-Fock supplies spatial orbitals for the CAS(4e,5o)
+Hamiltonian. The initial quantum state is an equal superposition of five
+spin-adapted S=2, Ms=0 configuration state functions, not a Hartree-Fock
+determinant.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ from __future__ import annotations
 import argparse
 import csv
 from contextlib import redirect_stdout
+from itertools import combinations
 from pathlib import Path
 import sys
 
@@ -27,7 +30,7 @@ from matplotlib.ticker import FormatStrFormatter
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ocqkudsin import MolecularProblem, QuantumOCQKUDSIN, balanced_spin_sector
+from ocqkudsin import MolecularProblem, QuantumOCQKUDSIN
 
 
 SYMBOLS = ("Fe", "Fe", "S", "S")
@@ -45,23 +48,41 @@ GEOMETRY_ANGSTROM = np.array(
 )
 BASIS = "6-31g"
 CHARGE = 0
-SPIN = 0
+ORBITAL_REFERENCE_SPIN = 0
 ACTIVE_ELECTRONS = 4
-ACTIVE_ORBITALS = 4
+ACTIVE_ORBITALS = 5
 EPSILONS = (0.5, 0.8, 1.2)
-MAX_DIMENSION = 8
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "fe2s2"
+MAX_DIMENSION = 5
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "fe2s2_quintet"
 
 
-def _singlet_rhf(geometry_angstrom: np.ndarray):
-    """Converge restricted orbitals for the stated neutral singlet model."""
+def _quintet_csf_basis() -> np.ndarray:
+    """Return the five S=2, Ms=0 CSFs for four electrons in five orbitals."""
+
+    n_qubits = 2 * ACTIVE_ORBITALS
+    basis = np.zeros((2**n_qubits, ACTIVE_ORBITALS), dtype=complex)
+    for empty_orbital in range(ACTIVE_ORBITALS):
+        occupied = tuple(
+            orbital for orbital in range(ACTIVE_ORBITALS)
+            if orbital != empty_orbital
+        )
+        for alpha_orbitals in combinations(occupied, 2):
+            bits = np.zeros(n_qubits, dtype=int)
+            for orbital in occupied:
+                bits[2 * orbital + (0 if orbital in alpha_orbitals else 1)] = 1
+            basis[int("".join(map(str, bits)), 2), empty_orbital] = 1 / np.sqrt(6)
+    return basis
+
+
+def _rhf_orbitals(geometry_angstrom: np.ndarray):
+    """Converge restricted orbitals used to build the active Hamiltonian."""
 
     molecule = gto.M(
         atom=list(zip(SYMBOLS, geometry_angstrom)),
         unit="Angstrom",
         basis=BASIS,
         charge=CHARGE,
-        spin=SPIN,
+        spin=ORBITAL_REFERENCE_SPIN,
         verbose=0,
     )
     mean_field = scf.RHF(molecule)
@@ -86,16 +107,16 @@ def _build_shifted_problem(
     unchanged. It is added back to every reported physical energy.
     """
 
-    mean_field = _singlet_rhf(geometry_angstrom)
+    mean_field = _rhf_orbitals(geometry_angstrom)
     rhf_energy = float(mean_field.e_tot)
     casci = mcscf.CASCI(mean_field, ACTIVE_ORBITALS, ACTIVE_ELECTRONS)
     one_mo, core_energy = casci.get_h1eff()
     two_chemist = ao2mo.restore(
         1, casci.get_h2eff(), ACTIVE_ORBITALS
     )
-    singlet_fci_energy, _ = fci.direct_spin0.kernel(
+    quintet_fci_energy, _ = fci.direct_spin1.kernel(
         one_mo, two_chemist, ACTIVE_ORBITALS,
-        (ACTIVE_ELECTRONS // 2, ACTIVE_ELECTRONS // 2),
+        (ACTIVE_ELECTRONS, 0),
         ecore=core_energy,
     )
     two_physicist = np.swapaxes(two_chemist, 1, 3)
@@ -131,42 +152,42 @@ def _build_shifted_problem(
     if not np.isfinite(pauli_bound) or pauli_bound <= 0:
         raise ValueError("the shifted Pauli coefficient bound must be positive")
 
-    hf_bits = np.asarray(
-        qml.qchem.hf_state(ACTIVE_ELECTRONS, n_qubits), dtype=int
-    )
-    hf_state = np.zeros(2**n_qubits, dtype=complex)
-    hf_state[int("".join(map(str, hf_bits)), 2)] = 1.0
+    # The solver's legacy hf_state field holds its arbitrary input vector.
+    # This equal combination spans all five quintet configurations; hf_bits
+    # is unused because no single determinant describes the initial state.
+    quintet_state = np.sum(_quintet_csf_basis(), axis=1) / np.sqrt(ACTIVE_ORBITALS)
     problem = MolecularProblem(
         hamiltonian=shifted_hamiltonian,
         coefficients=shifted_coefficients,
         operators=shifted_operators,
         n_qubits=n_qubits,
-        hf_bits=hf_bits,
-        hf_state=hf_state,
+        hf_bits=np.array([], dtype=int),
+        hf_state=quintet_state,
         pauli_bound=pauli_bound,
     )
-    return problem, identity_shift, rhf_energy, float(singlet_fci_energy)
+    return problem, identity_shift, rhf_energy, float(quintet_fci_energy)
 
 
-def _hf_connected_exact_energy(
+def _quintet_connected_exact_energy(
     problem: MolecularProblem, identity_shift: float, fci_energy: float
 ) -> tuple[float, float]:
-    """Find the lowest exact state with weight in the RHF reference."""
+    """Find the lowest quintet eigenstate reached by the CSF reference."""
 
-    sector = balanced_spin_sector(
-        problem.n_qubits, ACTIVE_ELECTRONS // 2, ACTIVE_ELECTRONS // 2
-    )
+    basis = _quintet_csf_basis()
     matrix = np.asarray(
         qml.matrix(problem.hamiltonian, wire_order=range(problem.n_qubits)),
         dtype=complex,
     )
-    eigenvalues, eigenvectors = np.linalg.eigh(matrix[np.ix_(sector, sector)])
+    projected = basis.conj().T @ matrix @ basis
+    if np.linalg.norm(matrix @ basis - basis @ projected) > 1e-7:
+        raise ValueError("the spin-adapted quintet subspace is not invariant")
+    eigenvalues, eigenvectors = np.linalg.eigh(projected)
     if abs(eigenvalues[0] + identity_shift - fci_energy) > 1e-7:
-        raise ValueError("the Pauli Hamiltonian disagrees with the CASCI FCI energy")
-    weights = np.abs(eigenvectors.conj().T @ problem.hf_state[sector]) ** 2
+        raise ValueError("the Pauli Hamiltonian disagrees with quintet CASCI FCI")
+    weights = np.abs(eigenvectors.conj().T @ basis.conj().T @ problem.hf_state) ** 2
     connected = np.flatnonzero(weights > 1e-10)
     if not len(connected):
-        raise ValueError("no exact state overlaps the RHF reference")
+        raise ValueError("no exact quintet state overlaps the initial state")
     return float(eigenvalues[connected[0]] + identity_shift), float(weights[0])
 
 
@@ -261,26 +282,28 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
     if geometry.shape != (len(SYMBOLS), 3) or not np.all(np.isfinite(geometry)):
         raise ValueError("GEOMETRY_ANGSTROM must contain four finite XYZ rows")
     problem, identity_shift, rhf_energy, fci_energy = _build_shifted_problem(geometry)
-    connected_energy, fci_weight = _hf_connected_exact_energy(
+    connected_energy, fci_weight = _quintet_connected_exact_energy(
         problem, identity_shift, fci_energy
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Fe2S2 (2Fe-2S), neutral singlet, 6-31G, 4 electrons in 4 active orbitals")
-    print("Geometry: illustrative planar rhombus derived from approximate neutral Fe2S2 bond lengths")
-    print("The geometry is not optimized for this model; CAS(4e,4o) is a small benchmark active space.")
+    print("Fe2S2 (2Fe-2S), neutral, 6-31G, 4 electrons in 5 active orbitals")
+    print("Geometry: illustrative planar rhombus; not optimized for the quintet")
+    print("Initial state: spin-adapted quintet (S=2, Ms=0)")
+    print("Equal superposition of five four-singly-occupied CSFs (30 determinants).")
     for symbol, coordinates in zip(SYMBOLS, geometry):
         print(f"  {symbol:2s}  {coordinates[0]: .6f}  {coordinates[1]: .6f}  {coordinates[2]: .6f} Angstrom")
-    print("Hamiltonian source: converged PySCF RHF orbitals and 4e/4o CASCI integrals")
-    print(f"RHF converged; RHF energy = {rhf_energy:.12f} Ha")
+    print("Hamiltonian source: PySCF RHF orbital basis and 4e/5o CASCI integrals")
+    print(f"RHF orbital calculation converged; energy = {rhf_energy:.12f} Ha")
     print(f"Identity energy offset: {identity_shift:.12f} Ha")
     print(f"Shifted Pauli coefficient bound: {problem.pauli_bound:.12f} Ha")
     print("Sine filter acts on the identity-shifted Hamiltonian; the offset is restored below.")
-    print(f"Singlet active-space FCI (2 alpha + 2 beta): {fci_energy:.12f} Ha")
-    print(f"Lowest RHF-connected exact energy: {connected_energy:.12f} Ha")
-    print(f"RHF weight in the lowest singlet FCI state: {fci_weight:.3e}")
+    print(f"Quintet active-space FCI (4 alpha + 0 beta): {fci_energy:.12f} Ha")
+    print("The Ms=2 FCI sector has the same energy spectrum as the Ms=0 quintet sector.")
+    print(f"Lowest initial-state-connected quintet energy: {connected_energy:.12f} Ha")
+    print(f"Initial-state weight in the quintet FCI ground state: {fci_weight:.3e}")
     if fci_weight <= 1e-10:
-        print("The singlet FCI ground state is inaccessible from this symmetry-preserving RHF reference.")
+        print("The quintet FCI ground state is inaccessible from this symmetry-preserving initial state.")
 
     condition_data = []
     energy_data = []
@@ -296,7 +319,7 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
         ).run()
         print(f"\nepsilon = {epsilon:g}")
         print(
-            " K   Energy (Ha)          FCI error (Ha)       alpha"
+            " K   Energy (Ha)      Quintet FCI error (Ha)  alpha"
             "          beta      overlap condition"
         )
         dimensions = []
@@ -342,16 +365,16 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
         axes.plot(dimensions, energies, marker="o", label=rf"$\epsilon={epsilon:g}$")
     axes.axhline(
         fci_energy, color="black", linestyle="--",
-        label=f"Active-space FCI: {fci_energy:.6f} Ha",
+        label=f"Quintet FCI: {fci_energy:.6f} Ha",
     )
     if connected_energy - fci_energy > 1e-8:
         axes.axhline(
             connected_energy, color="gray", linestyle=":",
-            label=f"RHF-connected exact: {connected_energy:.6f} Ha",
+            label=f"Initial-state-connected: {connected_energy:.6f} Ha",
         )
     axes.set_xlabel("Krylov dimension (K)")
-    axes.set_ylabel("Ground-state energy estimate (Ha)")
-    axes.set_title(r"Fe$_2$S$_2$ active-space energy convergence")
+    axes.set_ylabel("Quintet energy estimate (Ha)")
+    axes.set_title(r"Fe$_2$S$_2$ quintet energy convergence")
     axes.grid(True, linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
@@ -367,11 +390,11 @@ def main(*, output_dir: Path = OUTPUT_DIR) -> None:
     if connected_energy - fci_energy > 1e-8:
         axes.axhline(
             connected_energy - fci_energy, color="gray", linestyle=":",
-            label="RHF-connected error floor",
+            label="Initial-state-connected error floor",
         )
     axes.set_xlabel("Krylov dimension (K)")
-    axes.set_ylabel("Absolute error from active-space FCI (Ha)")
-    axes.set_title(r"Fe$_2$S$_2$ energy error relative to active-space FCI")
+    axes.set_ylabel("Absolute error from quintet FCI (Ha)")
+    axes.set_title(r"Fe$_2$S$_2$ energy error relative to quintet FCI")
     axes.grid(True, which="both", linestyle="--", alpha=0.5)
     axes.legend()
     figure.tight_layout()
@@ -410,7 +433,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output-dir", type=Path, default=OUTPUT_DIR,
-        help="directory for OCQKUDSIN results (default: output/fe2s2/)",
+        help="directory for OCQKUDSIN results (default: output/fe2s2_quintet/)",
     )
     args = parser.parse_args()
     output_dir = Path(args.output_dir)

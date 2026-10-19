@@ -44,14 +44,16 @@ in Ha, and writes results to `output/h4_sq/`. Use `--output-dir PATH` with
 either input to choose another output directory. The collected-values PDF
 above retains its separate archived Hamiltonian for reproducibility.
 
-For the four-atom Fe2S2 (2Fe-2S) model with 4 electrons in 4 active orbitals,
+For the four-atom Fe2S2 (2Fe-2S) model with 4 electrons in 5 active orbitals,
 install the optional dependencies with `python -m pip install -e '.[fe2s]'`,
 then run `python3 examples/fe2s.py`. The example uses an illustrative planar
-neutral singlet geometry and saves its text results, coefficient CSV, and plots
-to `output/fe2s2/`. Its restricted Hartree-Fock reference and small active
-space are intended as an algorithm benchmark, not a full description of the
-iron spin coupling. The output reports both the singlet FCI energy and the
-lowest exact energy reachable from the RHF reference. The earlier three-atom
-results remain in `output/fe2s/`.
+geometry and a spin-adapted quintet initial state with S=2 and Ms=0. That
+state combines all five four-singly-occupied active configurations so the
+Krylov run explores the quintet sector. RHF supplies only the orbital basis
+for the Hamiltonian. The text results, coefficient CSV, and plots are saved to
+`output/fe2s2_quintet/`. The quintet FCI benchmark uses the spin-equivalent
+4-alpha, 0-beta sector; the output also reports the lowest exact energy
+reachable from the initial state. The earlier singlet results remain in
+`output/fe2s2/` and the three-atom results in `output/fe2s/`.
 
 The original `ocqkudsin` import name `QuantumOCQKUD` also remains available.
